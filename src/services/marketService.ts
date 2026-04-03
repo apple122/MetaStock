@@ -47,6 +47,12 @@ async function fetchStockPrice(symbol: string): Promise<Partial<StockData> | nul
   if (!FINNHUB_API_KEY) return null;
   try {
     const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
+    
+    if (response.status === 401) {
+      console.warn(`Finnhub API Key is unauthorized (401). Please check your VITE_FINNHUB_API_KEY in .env. Falling back to current/mock data.`);
+      return null;
+    }
+
     const data = await response.json();
     if (data.c) {
       return {

@@ -11,6 +11,7 @@ import { News } from "./pages/News";
 import { AuthForms } from "./components/auth/AuthForms";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Admin } from "./pages/Admin";
+import { ScrollToTop } from "./components/layout/ScrollToTop";
 
 function AppContent() {
   const { session, isAdmin, loading } = useAuth();
@@ -30,6 +31,7 @@ function AppContent() {
   return (
     <WalletProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
