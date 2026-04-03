@@ -53,7 +53,7 @@ export const MarketTable: React.FC<MarketTableProps> = ({ stocks, t }) => {
               >
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden object-contain border border-white/5 flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                       {stock.icon}
                     </div>
                     <div>

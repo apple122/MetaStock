@@ -1,21 +1,5 @@
+import React from "react";
 import { ShoppingBasket } from "lucide-react";
-
-// Asset Icons
-import goldIcon from "../assets/icon/Gold.png";
-import bitcoinIcon from "../assets/icon/Bitcoin.png";
-import ethereumIcon from "../assets/icon/Ethereum.png";
-import tetherIcon from "../assets/icon/Tether.png";
-import bnbIcon from "../assets/icon/BNB.png";
-import solanaIcon from "../assets/icon/Solano.png";
-import dogecoinIcon from "../assets/icon/Dogecion.png";
-import nvidiaIcon from "../assets/icon/NVIDIA.png";
-import appleIcon from "../assets/icon/Apple Inc.png";
-import teslaIcon from "../assets/icon/Tesla.png";
-import netflixIcon from "../assets/icon/Netflix.png";
-import amazonIcon from "../assets/icon/Amazon.com.png";
-import googleIcon from "../assets/icon/Google.png";
-import metaIcon from "../assets/icon/Meta Platforms.png";
-import microsoftIcon from "../assets/icon/Microsoft Corp.png";
 
 export const mockStocks = [
   {
@@ -26,9 +10,9 @@ export const mockStocks = [
     change: 1.2,
     icon: (
       <img
-        src={goldIcon}
+        src="https://img.icons8.com/color/96/gold-bars.png"
         alt="Gold"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -40,9 +24,9 @@ export const mockStocks = [
     change: -0.5,
     icon: (
       <img
-        src={bitcoinIcon}
+        src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png"
         alt="Bitcoin"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -54,9 +38,9 @@ export const mockStocks = [
     change: 2.1,
     icon: (
       <img
-        src={ethereumIcon}
+        src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png"
         alt="Ethereum"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -68,9 +52,9 @@ export const mockStocks = [
     change: 0.01,
     icon: (
       <img
-        src={tetherIcon}
+        src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png"
         alt="Tether"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -82,9 +66,9 @@ export const mockStocks = [
     change: 0.8,
     icon: (
       <img
-        src={bnbIcon}
+        src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png"
         alt="BNB"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -96,9 +80,9 @@ export const mockStocks = [
     change: 5.4,
     icon: (
       <img
-        src={solanaIcon}
+        src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png"
         alt="Solana"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -110,9 +94,9 @@ export const mockStocks = [
     change: -2.3,
     icon: (
       <img
-        src={dogecoinIcon}
+        src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/doge.png"
         alt="Dogecoin"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -124,9 +108,9 @@ export const mockStocks = [
     change: 3.2,
     icon: (
       <img
-        src={nvidiaIcon}
+        src="https://financialmodelingprep.com/image-stock/NVDA.png"
         alt="NVIDIA"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -138,9 +122,9 @@ export const mockStocks = [
     change: -0.8,
     icon: (
       <img
-        src={appleIcon}
+        src="https://financialmodelingprep.com/image-stock/AAPL.png"
         alt="Apple"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -152,9 +136,9 @@ export const mockStocks = [
     change: -1.5,
     icon: (
       <img
-        src={teslaIcon}
+        src="https://financialmodelingprep.com/image-stock/TSLA.png"
         alt="Tesla"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -166,9 +150,9 @@ export const mockStocks = [
     change: 1.1,
     icon: (
       <img
-        src={netflixIcon}
+        src="https://financialmodelingprep.com/image-stock/NFLX.png"
         alt="Netflix"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -180,9 +164,9 @@ export const mockStocks = [
     change: 0.5,
     icon: (
       <img
-        src={amazonIcon}
+        src="https://financialmodelingprep.com/image-stock/AMZN.png"
         alt="Amazon"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -194,9 +178,9 @@ export const mockStocks = [
     change: 1.5,
     icon: (
       <img
-        src={googleIcon}
+        src="https://financialmodelingprep.com/image-stock/GOOGL.png"
         alt="Google"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -208,9 +192,9 @@ export const mockStocks = [
     change: 2.1,
     icon: (
       <img
-        src={metaIcon}
+        src="https://financialmodelingprep.com/image-stock/META.png"
         alt="Meta"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -222,9 +206,9 @@ export const mockStocks = [
     change: 0.8,
     icon: (
       <img
-        src={microsoftIcon}
+        src="https://financialmodelingprep.com/image-stock/MSFT.png"
         alt="Microsoft"
-        className="w-full h-full object-contain p-1"
+        className="w-full h-full object-cover"
       />
     ),
   },
@@ -234,6 +218,12 @@ export const mockStocks = [
     symbol: "CART",
     price: 32.45,
     change: 4.2,
-    icon: <ShoppingBasket className="text-pink-500" />,
+    icon: (
+      <img
+        src="https://financialmodelingprep.com/image-stock/CART.png"
+        alt="Instacart"
+        className="w-full h-full object-cover"
+      />
+    ),
   },
 ];

@@ -9,24 +9,26 @@ import {
 } from "lucide-react";
 import { mockStocks } from "../data/mockStocks";
 import { MarketTable } from "../components/home/MarketTable";
+import { marketService } from "../services/marketService";
+import type { StockData } from "../services/marketService";
 
 export const Home: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [stocks, setStocks] = useState(mockStocks);
+  const [stocks, setStocks] = useState<StockData[]>(mockStocks as StockData[]);
+  const goldStock = stocks.find((s: StockData) => s.symbol === "GOLD");
   const featuredCART =
-    stocks.find((s) => s.symbol === "CART") || mockStocks[15];
+    stocks.find((s: StockData) => s.symbol === "CART") || (mockStocks[15] as StockData);
 
-  // Simulate real-time updates
+  // Real-time updates from market API
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStocks((prev) =>
-        prev.map((s) => ({
-          ...s,
-          price: s.price + (Math.random() - 0.5) * (s.price * 0.001),
-        })),
-      );
-    }, 3000);
+    const updateMarketData = async () => {
+      const updated = await marketService.updateStocks(stocks);
+      setStocks(updated);
+    };
+
+    updateMarketData(); // Initial fetch
+    const interval = setInterval(updateMarketData, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -43,14 +45,14 @@ export const Home: React.FC = () => {
           <div className="space-y-4 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/20 text-sm font-bold">
               <Star size={16} fill="currentColor" />
-              LATEST GOLD PRICE
+              LATEST GOLD {t("Price")}
             </div>
             <h2 className="text-5xl font-black text-white tracking-tight">
-              $2,315.40
+              ${goldStock?.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </h2>
-            <div className="flex items-center gap-2 text-green-500 font-bold">
-              <TrendingUp size={20} />
-              <span>+1.2% ($27.5) Today</span>
+            <div className={`flex items-center gap-2 font-bold ${(goldStock?.change ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+              <TrendingUp size={20} className={(goldStock?.change ?? 0) < 0 ? "rotate-180" : ""} />
+              <span>{(goldStock?.change ?? 0) >= 0 ? "+" : ""}{(goldStock?.change ?? 0).toFixed(2)}% Today</span>
             </div>
           </div>
           <div className="hidden lg:block">

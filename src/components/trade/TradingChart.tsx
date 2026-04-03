@@ -30,14 +30,14 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol }) => {
     script.innerHTML = JSON.stringify({
       "autosize": true,
       "symbol": tvSymbol,
-      "interval": "1",
+      "interval": "15",
       "timezone": "Etc/UTC",
       "theme": "dark",
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
       "hide_top_toolbar": false,
-      "allow_symbol_change": true,
+      "allow_symbol_change": false,
       "calendar": false,
       "hide_volume": false,
       "support_host": "https://www.tradingview.com"
