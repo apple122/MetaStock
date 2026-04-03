@@ -1,0 +1,53 @@
+แอพ  MetaStock Stock Trading
+React + tailwindcss + supabase
+Header Navbar
+- Logo Name
+- เปลียนภาษา: ไทย, English
+Navigation mobile
+- หน้าแรก
+- ชื้อ-ขาย
+- รุป + : เป็นหน้าปะหวัดการชื้-ขาย 
+- กระเป้า
+- การตั้งค่า
+
+Form Login
+- UserName
+- Password
+register
+- Username
+- Email
+- tel
+- Password
+- confirm password
+
+1. หน้าแรก
+- รายการทองคำประจุบัน
+- Instacart (Maplebear Inc.)
+- Table: รายงานสะกุนเงิน Gold, Bitcoin, Ethereum, Tether, BNB, Solano, Dogecion, Sui, Polygon, Cardano, Stellar, Status, Civic, NVIDIA, Apple, Tesla, Netflix, Amazon, Goodgle, Meta, MSFT
+	- รายการ, ราคาล่าสุด, 24ชม
+2. ชื้อ-ขาย
+- สามารกดชื้อขายการเทดหุ้นได้ และ มี Instacart (Maplebear Inc.)
+3. กระเป้าเงิน
+- ปุ่มฝาก
+- ปุ่ม Staking
+- ปุ่มถ่อน
+- รายการ My Staking
+- Recent Transactions
+4. ตั้งค่า
+- รายงานเงินทั้งหมด
+- ยืนยั้นตัวตัน
+	- ชื่อ
+	- นามสะกุน
+	- ชื่อผู้ใช้
+	- เบร์อมือถือ
+	- ที่อยู่
+	Bank Details
+	- เครีอข่าย
+	- ที่อยู่
+	- ชื่อบัญชี
+	- ปุ่มบันทืก
+- ประวัตการเตีมเงิน
+- ประวัตการถอนเงิน
+- เปลียนละหัดผ่าน
+
+ทุกๆไฟล์ทำการแยกฟังชั้น และ โฟลเด้อของแค่ละไฟล์
