@@ -70,14 +70,16 @@ const OtpModal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 cursor-pointer"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.85, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ type: "spring", damping: 22, stiffness: 260 }}
-        className="w-full max-w-sm relative"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm relative cursor-default"
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 to-accent/30 blur-3xl opacity-50 rounded-3xl" />
 

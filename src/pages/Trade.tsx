@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useClickOutside } from "../hooks/useClickOutside";
 import { useWallet } from "../contexts/WalletContext";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -109,6 +110,11 @@ export const Trade: React.FC = () => {
     }, 3000);
   };
 
+  const searchRef = useRef<HTMLDivElement>(null);
+  useClickOutside(searchRef, () => {
+    if (showSearch) setShowSearch(false);
+  });
+
   const filteredAssets = assets.filter(
     (a) =>
       a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,25 +122,25 @@ export const Trade: React.FC = () => {
   );
 
   return (
-    <div className="pt-24 pb-32 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+    <div className="pt-24 pb-32 px-4 md:px-6 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
       <NotificationList notifications={notifications} />
 
       {/* Chart & Asset Info */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-6 w-full">
         <div className="w-full relative z-30">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card relative"
+            className="glass-card relative w-full"
           >
             {/* Background Accent Gradient */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] pointer-events-none" />
 
-            <div className="relative p-6 md:p-8 space-y-8 z-50">
+            <div className="relative md:p-8 space-y-6 z-50">
               {/* Top Row: Identity & Price */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {selectedAsset.iconUrl ? (
                       <img
@@ -154,16 +160,16 @@ export const Trade: React.FC = () => {
                     {/* Premium Glow */}
                     <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent opacity-20 blur-md rounded-2xl" />
                   </div>
-                  <div className="relative">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none mb-1">
+                  <div className="relative" ref={searchRef}>
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <h2 className="text-xl md:text-3xl font-black text-white tracking-tight leading-none mb-1">
                         {selectedAsset.name}
                       </h2>
                       <button
                         onClick={() => setShowSearch(!showSearch)}
                         className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
                       >
-                        {showSearch ? <X size={18} /> : <Search size={18} />}
+                        {showSearch ? <X size={16} /> : <Search size={16} />}
                       </button>
                     </div>
                     <div className="flex items-center gap-3">
@@ -185,7 +191,7 @@ export const Trade: React.FC = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className="absolute left-0 top-full mt-4 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 p-4 space-y-4"
+                          className="absolute md:left-0 left-[-20%] top-full mt-4 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 p-4 space-y-4"
                         >
                           <div className="relative">
                             <Search
@@ -211,8 +217,8 @@ export const Trade: React.FC = () => {
                                   setSearchTerm("");
                                 }}
                                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedAsset.symbol === asset.symbol
-                                    ? "bg-primary text-white"
-                                    : "hover:bg-white/5 text-slate-300"
+                                  ? "bg-primary text-white"
+                                  : "hover:bg-white/5 text-slate-300"
                                   }`}
                               >
                                 <div className="flex items-center gap-3">
@@ -253,26 +259,25 @@ export const Trade: React.FC = () => {
 
                 {/* Main Price Display */}
                 <div className="flex flex-col items-start md:items-end">
-                  <div className="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums leading-none">
+                  <div className="text-3xl md:text-5xl font-black text-white tracking-tighter tabular-nums leading-none">
                     ${livePrice.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </div>
-                  <div className={`flex items-center gap-1.5 font-black text-sm mt-1.5 ${(selectedAsset.change ?? 0) >= 0 ? "text-green-500" : "text-red-500"
+                  <div className={`flex items-center gap-1.5 font-black text-xs md:text-sm mt-1 md:mt-1.5 ${(selectedAsset.change ?? 0) >= 0 ? "text-green-500" : "text-red-500"
                     }`}>
                     {(selectedAsset.change ?? 0) >= 0 ? (
-                      <TrendingUp size={16} strokeWidth={3} />
+                      <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} />
                     ) : (
-                      <TrendingDown size={16} strokeWidth={3} />
+                      <TrendingDown className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} />
                     )}
                     {Math.abs(selectedAsset.change ?? 0).toFixed(2)}%
                   </div>
                 </div>
               </div>
 
-              {/* Stats Bar */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-5 rounded-2xl bg-white/5 border border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 p-4 md:p-5 rounded-2xl bg-white/5 border border-white/5">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">24h High</p>
                   <p className="text-base font-bold text-white tabular-nums">
@@ -304,24 +309,26 @@ export const Trade: React.FC = () => {
         </div>
 
         {/* Chart Area */}
-        <div className="glass-card h-[500px] p-0 overflow-hidden relative z-0">
+        <div className="glass-card h-[400px] md:h-[500px] p-0 overflow-hidden relative z-0 w-full">
           <TradingChart symbol={selectedAsset.symbol} />
         </div>
       </div>
 
       {/* Trading Panel */}
-      <TradingPanel
-        balance={balance}
-        amount={amount}
-        setAmount={setAmount}
-        orderType={orderType}
-        setOrderType={setOrderType}
-        onTrade={onTrade}
-        tradeLoading={tradeLoading}
-        selectedAsset={selectedAsset}
-        livePrice={livePrice}
-        transactions={(transactions as any[])}
-      />
+      <div className="lg:col-span-1 w-full">
+        <TradingPanel
+          balance={balance}
+          amount={amount}
+          setAmount={setAmount}
+          orderType={orderType}
+          setOrderType={setOrderType}
+          onTrade={onTrade}
+          tradeLoading={tradeLoading}
+          selectedAsset={selectedAsset}
+          livePrice={livePrice}
+          transactions={(transactions as any[])}
+        />
+      </div>
     </div>
   );
 };

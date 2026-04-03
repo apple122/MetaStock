@@ -154,15 +154,24 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             .map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between py-2 border-b border-white/5 last:border-0 hover:translate-x-1 transition-transform cursor-pointer"
+                className="flex items-center justify-between py-3 border-b border-white/5 last:border-0 hover:translate-x-1 transition-transform cursor-pointer group"
               >
-                <div>
-                  <p className="text-xs font-bold text-white uppercase">
-                    {tx.type} {tx.asset}
-                  </p>
-                  <p className="text-[10px] text-slate-500">
-                    {new Date(tx.timestamp).toLocaleString()}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center relative flex-shrink-0 shadow-sm ${tx.type === "buy" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                    {tx.type === "buy" ? (
+                      <ArrowUpRight size={16} strokeWidth={2.5} />
+                    ) : (
+                      <ArrowDownLeft size={16} strokeWidth={2.5} />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white uppercase group-hover:text-primary transition-colors">
+                      {tx.type} {tx.asset}
+                    </p>
+                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                      {new Date(tx.timestamp).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p

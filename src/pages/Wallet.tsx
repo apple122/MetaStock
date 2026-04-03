@@ -6,13 +6,15 @@ import {
   Wallet as WalletIcon,
   ArrowUpCircle,
   ArrowDownCircle,
-  PieChart,
+  ArrowUpRight,
+  ArrowDownLeft,
   Clock,
   Zap,
   X,
 } from "lucide-react";
 import { DepositModal } from "../components/wallet/DepositModal";
 import { WithdrawModal } from "../components/wallet/WithdrawModal";
+import { assets } from "../data/marketData";
 
 type ModalType = "deposit" | "withdraw" | "staking" | null;
 
@@ -29,6 +31,8 @@ export const Wallet: React.FC = () => {
   const { balance, transactions } = useWallet();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "trades" | "wallets">("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const closeModal = () => setActiveModal(null);
 
@@ -95,169 +99,215 @@ export const Wallet: React.FC = () => {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-8">
-        {/* Trade History (Buy / Sell) */}
+      <div className="grid grid-cols-1">
+        {/* Unified Activity Ledger */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="glass-card p-0 overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-0 overflow-hidden border-white/5 flex flex-col"
         >
-          <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <PieChart size={20} className="text-accent" />
-              {t("tradeHistory")}
-            </h3>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="bg-slate-900 border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 focus:outline-none focus:border-primary/50 cursor-pointer"
-            >
-              <option value="all">{t("allCategories")}</option>
-              <option value="crypto">{t("crypto")}</option>
-              <option value="commodity">{t("commodity")}</option>
-              <option value="stock">{t("stock")}</option>
-            </select>
+          {/* Ledger Header */}
+          <div className="p-6 border-b border-white/5 space-y-6 bg-slate-900/40 backdrop-blur-xl sticky top-0 z-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                  <Clock size={22} className="text-primary" />
+                  {t("activityLedger")}
+                </h3>
+                <p className="text-slate-500 text-xs mt-1 font-medium">
+                  {t("trackActivityDesc")}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="bg-slate-900/80 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                >
+                  <option value="all">{t("allAssets")}</option>
+                  <option value="crypto">{t("crypto")}</option>
+                  <option value="commodity">{t("commodity")}</option>
+                  <option value="stock">{t("stock")}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Tabs Selector */}
+            <div className="flex gap-1 p-1 bg-black/20 rounded-2xl w-full md:w-fit self-start border border-white/5">
+              {[
+                { id: "all", label: t("all") },
+                { id: "trades", label: t("trades") },
+                { id: "wallets", label: t("wallets") },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`relative px-6 py-2 text-xs font-black uppercase tracking-wider transition-all rounded-xl ${activeTab === tab.id ? "text-white" : "text-slate-500 hover:text-slate-300"
+                    }`}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-xl shadow-lg shadow-primary/20"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="p-6 space-y-4">
-            {transactions
-              .filter((t) => t.type === "buy" || t.type === "sell")
-              .filter(
-                (t) =>
-                  categoryFilter === "all" ||
-                  getAssetCategory(t.asset) === categoryFilter,
-              ).length === 0 ? (
-              <p className="text-center text-slate-500 text-sm py-4">
-                {t("noTradeHistory")}
-              </p>
-            ) : (
-              transactions
-                .filter((t) => t.type === "buy" || t.type === "sell")
-                .filter(
-                  (t) =>
-                    categoryFilter === "all" ||
-                    getAssetCategory(t.asset) === categoryFilter,
-                )
-                .map((trade) => (
-                  <div
-                    key={trade.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 gap-4 sm:gap-0"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white ${trade.type === "buy"
-                          ? "bg-green-500/20 text-green-500"
-                          : "bg-red-500/20 text-red-500"
+
+          {/* Ledger Content with Overflow Control (Vertical Only) */}
+          <div className="w-full group/ledger">
+            <div className="w-full max-h-[600px] overflow-y-auto custom-scrollbar p-2">
+              <AnimatePresence mode="popLayout">
+                {transactions
+                  .filter((tx) => {
+                    if (activeTab === "trades") return tx.type === "buy" || tx.type === "sell";
+                    if (activeTab === "wallets") return tx.type === "deposit" || tx.type === "withdraw";
+                    return true;
+                  })
+                  .filter((tx) => {
+                    if (categoryFilter === "all") return true;
+                    if (!tx.asset) return categoryFilter === "wallets"; // or similar logic
+                    return getAssetCategory(tx.asset) === categoryFilter;
+                  })
+                  .map((tx, idx) => {
+                    const isExpanded = expandedId === tx.id;
+                    const assetInfo = tx.asset ? assets.find((a) => a.symbol === tx.asset) : null;
+
+                    return (
+                      <motion.div
+                        layout
+                        key={tx.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ delay: idx * 0.03 }}
+                        onClick={() => setExpandedId(isExpanded ? null : tx.id)}
+                        className={`group flex flex-col p-4 rounded-2xl transition-all cursor-pointer border border-transparent hover:bg-white/[0.03] hover:border-white/5 mb-1 ${isExpanded ? "bg-white/[0.04] border-white/10 shadow-2xl" : ""
                           }`}
                       >
-                        {trade.type === "buy" ? "B" : "S"}
-                      </div>
-                      <div>
-                        <p className="text-white font-bold flex items-center gap-2">
-                          <span>{trade.asset}</span>
-                          <span className="text-[9px] text-slate-400 border border-slate-600 rounded px-1.5 py-0.5">
-                            {t(getAssetCategory(trade.asset))}
-                          </span>
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase ${trade.type === "buy"
-                              ? "bg-green-500/10 text-green-400"
-                              : "bg-red-500/10 text-red-400"
-                              }`}
-                          >
-                            {trade.type === "buy"
-                              ? t("actionBuy")
-                              : t("actionSell")}
-                          </span>
-                        </p>
-                        <p className="text-[10px] text-slate-500 font-bold tracking-wider mt-0.5">
-                          {new Date(trade.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-left sm:text-right flex sm:block justify-between items-end border-t sm:border-t-0 border-white/5 pt-2 sm:pt-0 mt-2 sm:mt-0">
-                      <div>
-                        <p className="text-white font-mono text-sm">
-                          $
-                          {trade.total.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] text-slate-400 font-mono">
-                          {trade.amount.toLocaleString(undefined, {
-                            maximumFractionDigits: 6,
-                          })}{" "}
-                          @ $
-                          {trade.price.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-            )}
-          </div>
-        </motion.div>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            {/* Visual Icon (Squircle Arrow or Logo) */}
+                            <div
+                              className={`w-11 h-11 rounded-2xl flex items-center justify-center relative flex-shrink-0 shadow-lg ${tx.type === "deposit" || tx.type === "buy"
+                                ? "bg-green-500/10 text-green-500"
+                                : "bg-red-500/10 text-red-500"
+                                }`}
+                            >
+                              {tx.asset && assetInfo?.iconUrl ? (
+                                <div className="w-full h-full p-0.5">
+                                  <img src={assetInfo.iconUrl} className="w-full h-full object-cover rounded-xl" alt="" />
+                                  <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-slate-900 rounded-full ${tx.type === "buy" ? "bg-green-500" : "bg-red-500"}`} />
+                                </div>
+                              ) : (
+                                <>
+                                  {tx.type === "deposit" || tx.type === "buy" ? (
+                                    <ArrowUpRight size={22} strokeWidth={2.5} />
+                                  ) : (
+                                    <ArrowDownLeft size={22} strokeWidth={2.5} />
+                                  )}
+                                </>
+                              )}
+                            </div>
 
-        {/* Transactions */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="glass-card p-0 overflow-hidden"
-        >
-          <div className="p-6 border-b border-white/5 flex items-center justify-between">
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <Clock size={20} className="text-slate-400" />
-              {t("recentTransactions")}
-            </h3>
-            <button className="text-xs text-slate-500 font-bold hover:text-primary">
-              View All
-            </button>
-          </div>
-          <div className="p-2 space-y-1">
-            {transactions.length === 0 && (
-              <p className="text-center text-slate-500 text-sm py-8">
-                No transactions yet.
-              </p>
-            )}
-            {transactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="flex items-center justify-between p-4 rounded-xl hover:bg-white/[0.02] transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === "buy" || tx.type === "withdraw" ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"}`}
-                  >
-                    {tx.type === "buy" || tx.type === "withdraw" ? (
-                      <ArrowUpCircle size={20} />
-                    ) : (
-                      <ArrowDownCircle size={20} />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-white font-bold group-hover:text-primary transition-colors capitalize">
-                      {tx.type} {tx.asset}
-                    </p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                      {new Date(tx.timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p
-                    className={`text-sm font-bold ${tx.type === "buy" || tx.type === "withdraw" ? "text-red-500" : "text-green-500"}`}
-                  >
-                    {tx.type === "buy" || tx.type === "withdraw" ? "-" : "+"}$
-                    {tx.total.toLocaleString()}
-                  </p>
-                  <p className="text-[10px] text-slate-500">{tx.status}</p>
-                </div>
-              </div>
-            ))}
+                            <div>
+                              <p className="text-white font-black flex items-center gap-2 group-hover:text-primary transition-colors text-sm sm:text-base">
+                                <span className="capitalize">{tx.type}</span>
+                                {tx.asset && (
+                                  <span className="text-slate-400 bg-white/5 px-2 py-0.5 rounded-lg text-[10px] uppercase tracking-widest font-bold">
+                                    {tx.asset}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
+                                {new Date(tx.timestamp).toLocaleString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <p
+                              className={`text-base sm:text-lg font-black tabular-nums ${tx.type === "buy" || tx.type === "withdraw" ? "text-red-500" : "text-green-500"
+                                }`}
+                            >
+                              {tx.type === "buy" || tx.type === "withdraw" ? "-" : "+"} $
+                              {tx.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </p>
+                            <span
+                              className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${tx.status === "success" ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"
+                                }`}
+                            >
+                              {tx.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Expandable Details Row */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-5 mt-4 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-4 pb-2">
+                                <div className="space-y-1">
+                                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("transactionId")}</p>
+                                  <p className="text-xs text-white font-mono break-all group-active:select-all">#{tx.id.slice(0, 16)}...</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("type") || "Type"}</p>
+                                  <p className="text-xs text-white font-bold capitalize">{tx.type} {tx.asset ? "Market" : "Account"}</p>
+                                </div>
+                                {tx.price && (
+                                  <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("executionPrice")}</p>
+                                    <p className="text-xs text-white font-mono">${tx.price.toLocaleString()}</p>
+                                  </div>
+                                )}
+                                {tx.amount && (
+                                  <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("quantity")}</p>
+                                    <p className="text-xs text-white font-mono">{tx.amount.toFixed(6)} {tx.asset}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
+
+                {/* Empty State */}
+                {transactions.filter((tx) => {
+                  if (activeTab === "trades") return tx.type === "buy" || tx.type === "sell";
+                  if (activeTab === "wallets") return tx.type === "deposit" || tx.type === "withdraw";
+                  return true;
+                }).length === 0 && (
+                    <div className="py-20 text-center space-y-4">
+                      <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto border border-white/5">
+                        <Clock size={24} className="text-slate-700" />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold">{t("noRecordsFound")}</p>
+                        <p className="text-slate-500 text-xs">{t("noActivityInCat") || "There is no activity in this category yet."}</p>
+                      </div>
+                    </div>
+                  )}
+              </AnimatePresence>
+            </div>
           </div>
         </motion.div>
       </div>
