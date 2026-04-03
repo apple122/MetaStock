@@ -1,6 +1,3 @@
-import React from "react";
-import { ShoppingBasket } from "lucide-react";
-
 export const mockStocks = [
   {
     id: 1,
