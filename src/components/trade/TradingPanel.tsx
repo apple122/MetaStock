@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -34,6 +35,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
   transactions,
 }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
@@ -144,7 +146,10 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             <HistoryIcon size={16} className="text-primary" />
             {t("recentTransactions")}
           </h3>
-          <button className="text-xs text-slate-500 hover:text-primary">
+          <button
+            onClick={() => navigate("/history")}
+            className="text-xs text-slate-500 hover:text-primary transition-colors"
+          >
             View All
           </button>
         </div>
