@@ -103,19 +103,21 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     setSaveMessage("");
 
     try {
-      // Re-authenticate user to verify current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: profileData.email, 
-        password: currentPassword,
+      // Use the custom RPC function to verify current password and update
+      const { data, error: rpcError } = await supabase.rpc("update_password", {
+        current_plain_password: currentPassword,
+        new_plain_password: newPassword,
       });
 
-      if (signInError) throw new Error("Current password incorrect");
+      if (rpcError) throw rpcError;
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) throw updateError;
+      if (data === "incorrect") {
+        throw new Error("Current password incorrect");
+      }
+      
+      if (data === "unauthorized") {
+        throw new Error("You must be logged in to change your password");
+      }
 
       setSaveMessage("Password updated successfully!");
       setCurrentPassword("");

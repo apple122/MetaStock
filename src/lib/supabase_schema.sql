@@ -4,6 +4,7 @@
 
 -- Enable Extensions (usually in public)
 create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 
 -- 0.1 Function to generate random code
 create or replace function public.generate_random_code(length int) 
@@ -172,3 +173,44 @@ create policy "Admins can insert transactions for any user" on public.transactio
   for insert with check (
     exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
   );
+
+-- 10. RPC: Secure Password Update with current password verification
+create or replace function public.update_password(
+  current_plain_password text,
+  new_plain_password text
+) returns text as $$
+declare
+  user_id uuid;
+  is_valid boolean;
+begin
+  -- Get the current authenticated user ID
+  user_id := auth.uid();
+  
+  -- Check if user is logged in
+  if user_id is null then
+    return 'unauthorized';
+  end if;
+
+  -- Verify current password against auth.users
+  select exists (
+    select 1 from auth.users 
+    where id = user_id 
+    and encrypted_password = crypt(current_plain_password, auth.users.encrypted_password)
+  ) into is_valid;
+  
+  if not is_valid then
+    return 'incorrect';
+  end if;
+  
+  -- Update the password in auth.users
+  update auth.users 
+  set encrypted_password = crypt(new_plain_password, gen_salt('bf'))
+  where id = user_id;
+  
+  return 'success';
+end;
+$$ language plpgsql security definer;
+
+-- Restrict execution to authenticated users
+revoke execute on function public.update_password(text, text) from public;
+grant execute on function public.update_password(text, text) to authenticated;
