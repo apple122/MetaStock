@@ -143,7 +143,7 @@ export const Wallet: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`relative px-6 py-2 text-xs font-black uppercase tracking-wider transition-all rounded-xl ${activeTab === tab.id ? "text-white" : "text-slate-500 hover:text-slate-300"
+                  className={`relative flex-1 md:flex-none px-3 md:px-6 py-2 text-[10px] md:text-xs font-black uppercase tracking-wider transition-all rounded-xl ${activeTab === tab.id ? "text-white" : "text-slate-500 hover:text-slate-300"
                     }`}
                 >
                   {activeTab === tab.id && (
