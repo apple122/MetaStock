@@ -30,6 +30,8 @@ git add .
 git commit -m "อัปเดตระบบภาษา, ประวัติการเติมเงิน, และหน้า OTP"
 git push
 
+git push -u origin main
+
 ## ⚙️ Getting Started & Installation
 
 ### 1. Prerequisites

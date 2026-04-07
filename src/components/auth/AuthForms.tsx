@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,7 +15,6 @@ import {
   Globe,
   Activity
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth, type Profile } from "../../contexts/AuthContext";
 import logoImg from "../../assets/Logo-url.png";
@@ -33,7 +32,6 @@ const MARKET_DATA = [
 export const AuthForms: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
