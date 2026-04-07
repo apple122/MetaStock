@@ -33,6 +33,7 @@ export const Trade: React.FC = () => {
   const [selectedAsset, setSelectedAsset] = useState<any>(initialAsset);
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showMarketDetails, setShowMarketDetails] = useState(false);
 
   // Sync to localStorage when selection changes
   useEffect(() => {
@@ -140,7 +141,11 @@ export const Trade: React.FC = () => {
               {/* Top Row: Identity & Price */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group">
+                  <div
+                    className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group cursor-pointer hover:scale-105 transition-all"
+                    onClick={() => setShowMarketDetails(true)}
+                    title="View Market Details"
+                  >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {selectedAsset.iconUrl ? (
                       <img
@@ -157,19 +162,25 @@ export const Trade: React.FC = () => {
                     <span className={`fallback-letter text-white font-black text-2xl tracking-tighter relative z-10 ${selectedAsset.iconUrl ? "hidden" : ""}`}>
                       {selectedAsset.symbol[0]}
                     </span>
-                    {/* Premium Glow */}
                     <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent opacity-20 blur-md rounded-2xl" />
                   </div>
                   <div className="relative" ref={searchRef}>
                     <div className="flex items-center gap-2 md:gap-3">
-                      <h2 className="text-xl md:text-3xl font-black text-white tracking-tight leading-none mb-1">
+                      <h2
+                        className="text-xl md:text-3xl font-black text-white tracking-tight leading-none mb-1 cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => setShowMarketDetails(true)}
+                        title="View Market Details"
+                      >
                         {selectedAsset.name}
                       </h2>
                       <button
                         onClick={() => setShowSearch(!showSearch)}
-                        className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${showSearch ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"}`}
                       >
-                        {showSearch ? <X size={16} /> : <Search size={16} />}
+                        {showSearch ? <X size={14} /> : <Search size={14} />}
+                        <span className="text-xs font-black uppercase tracking-wider">
+                          {showSearch ? "Close" : "Search"}
+                        </span>
                       </button>
                     </div>
                     <div className="flex items-center gap-3">
@@ -191,7 +202,8 @@ export const Trade: React.FC = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className="absolute md:left-0 left-[-20%] top-full mt-4 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 p-4 space-y-4"
+                          className="absolute md:left-0 left-[-50%] top-full mt-4 w-80 md:w-96 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 p-4 space-y-4"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <div className="relative">
                             <Search
@@ -202,23 +214,24 @@ export const Trade: React.FC = () => {
                               autoFocus
                               type="text"
                               placeholder="Search assets..."
-                              className="w-full bg-slate-800 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+                              className="w-full bg-slate-800 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/40"
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
                             />
                           </div>
-                          <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                          <div className="max-h-72 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                             {filteredAssets.map((asset) => (
                               <button
                                 key={asset.id}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedAsset(asset);
                                   setShowSearch(false);
                                   setSearchTerm("");
                                 }}
-                                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedAsset.symbol === asset.symbol
-                                  ? "bg-primary text-white"
-                                  : "hover:bg-white/5 text-slate-300"
+                                className={`group w-full flex items-center justify-between p-3 rounded-xl transition-all border border-transparent ${selectedAsset.symbol === asset.symbol
+                                  ? "bg-primary/10 border-primary/20"
+                                  : "hover:bg-white/5 hover:border-white/10"
                                   }`}
                               >
                                 <div className="flex items-center gap-3">
@@ -237,18 +250,33 @@ export const Trade: React.FC = () => {
                                       {asset.symbol[0]}
                                     </span>
                                   </div>
-                                  <div className="text-left">
-                                    <p className="text-xs font-bold">{asset.name}</p>
-                                    <p className="text-[10px] opacity-60">{asset.symbol}</p>
+                                  <div className="text-left flex flex-col items-start">
+                                    <p className={`text-xs font-bold ${selectedAsset.symbol === asset.symbol ? "text-primary" : "text-white"}`}>{asset.name}</p>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{asset.symbol}</p>
                                   </div>
                                 </div>
-                                {selectedAsset.symbol === asset.symbol && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                )}
+
+                                <div className="flex items-center gap-3 md:gap-4">
+                                  <div className="text-right flex flex-col justify-center items-end">
+                                    <span className="text-xs font-bold text-white tabular-nums">${asset.price?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}</span>
+                                    <span className={`text-[10px] font-black tabular-nums mt-0.5 ${asset.change && asset.change >= 0 ? "text-green-500" : "text-red-500"}`}>
+                                      {asset.change && asset.change >= 0 ? "+" : ""}{asset.change?.toFixed(2)}%
+                                    </span>
+                                  </div>
+                                  <div className={`px-2.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${selectedAsset.symbol === asset.symbol
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                    : "bg-white/5 text-slate-400 group-hover:bg-primary group-hover:text-white"
+                                    }`}>
+                                    {selectedAsset.symbol === asset.symbol ? "Active" : "Trade"}
+                                  </div>
+                                </div>
                               </button>
                             ))}
                             {filteredAssets.length === 0 && (
-                              <p className="text-center py-4 text-xs text-slate-500">No assets found</p>
+                              <div className="text-center py-6">
+                                <p className="text-sm font-bold text-slate-400">No assets found</p>
+                                <p className="text-xs font-medium text-slate-500 mt-1">Try a different search term</p>
+                              </div>
                             )}
                           </div>
                         </motion.div>
@@ -329,6 +357,95 @@ export const Trade: React.FC = () => {
           transactions={(transactions as any[])}
         />
       </div>
+      {/* Market Details Modal */}
+      <AnimatePresence>
+        {showMarketDetails && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-6"
+            onClick={() => setShowMarketDetails(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Decorative Blur */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+
+              {/* Header */}
+              <div className="p-6 md:p-8 border-b border-white/5 flex items-start justify-between relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                    {selectedAsset.iconUrl ? (
+                      <img src={selectedAsset.iconUrl} alt={selectedAsset.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-black text-2xl uppercase">{selectedAsset.symbol[0]}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{selectedAsset.name} Information</h2>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-1">{selectedAsset.symbol} / USD</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowMarketDetails(false)}
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Data Grid content */}
+              <div className="p-6 md:p-8 space-y-8 relative z-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">Live Price</p>
+                    <p className="text-lg font-bold text-white">${livePrice.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">24h Change</p>
+                    <p className={`text-lg font-bold flex items-center gap-1 ${(selectedAsset.change ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {(selectedAsset.change ?? 0) >= 0 ? "+" : ""}{(selectedAsset.change ?? 0).toFixed(2)}%
+                    </p>
+                  </div>
+                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">24h High</p>
+                    <p className="text-lg font-bold text-white">${selectedAsset.high?.toLocaleString() || "---"}</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">24h Low</p>
+                    <p className="text-lg font-bold text-white">${selectedAsset.low?.toLocaleString() || "---"}</p>
+                  </div>
+                </div>
+
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
+                  <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-3">Market Overview</h3>
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    Trade <span className="font-bold text-white">{selectedAsset.name}</span> with ultra-low latency execution and deep liquidity. Capitalize on market volatility and secure exact pricing through our proprietary order-matching engine.
+                  </p>
+                </div>
+
+                {/* Trade Button Full Width Action */}
+                <button
+                  onClick={() => {
+                    setShowMarketDetails(false);
+                    // Focus logic is natively handled by user focusing the right panel, but auto-closing smooths the UX.
+                  }}
+                  className="w-full relative group overflow-hidden py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-black hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="relative z-10 text-lg tracking-tight">Trade {selectedAsset.symbol} Now</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

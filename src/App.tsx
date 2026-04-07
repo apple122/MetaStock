@@ -30,37 +30,37 @@ function AppContent() {
 
   return (
     <WalletProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="trade" element={<Trade />} />
-            <Route path="news" element={<News />} />
-            <Route path="history" element={<History />} />
-            <Route path="wallet" element={<Wallet />} />
-            <Route path="settings" element={<Settings />} />
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="trade" element={<Trade />} />
+          <Route path="news" element={<News />} />
+          <Route path="history" element={<History />} />
+          <Route path="wallet" element={<Wallet />} />
+          <Route path="settings" element={<Settings />} />
 
-            <Route
-              path="admin"
-              element={isAdmin ? <Admin /> : <Navigate to="/" replace />}
-            />
+          <Route
+            path="admin"
+            element={isAdmin ? <Admin /> : <Navigate to="/" replace />}
+          />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
     </WalletProvider>
   );
 }
 
 function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </LanguageProvider>
+    <BrowserRouter>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </LanguageProvider>
+    </BrowserRouter>
   );
 }
 

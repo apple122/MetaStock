@@ -52,11 +52,32 @@ export const Navbar: React.FC = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 py-4 px-6 md:px-12 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* User avatar & name */}
+        <div className="md:hidden flex items-center gap-2" onClick={() => navigate("/settings")}>
+          <motion.div
+            key={initials}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[10px] font-black border-2 border-white/20"
+          >
+            {initials}
+          </motion.div>
+          <motion.span
+            key={displayName}
+            initial={{ opacity: 0, x: 4 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-xl font-bold text-slate-300 max-w-[120px] truncate"
+          >
+            {displayName}
+          </motion.span>
+        </div>
+
+        {/* Icone Logo */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 group cursor-pointer"
+          className="hidden md:flex items-center gap-2 group cursor-pointer"
         >
           <div className="w-10 h-10 rounded-xl overflow-hidden group-hover:scale-110 transition-transform duration-300">
             <img

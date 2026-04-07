@@ -1,10 +1,13 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   ArrowDownLeft,
   History as HistoryIcon,
+  X,
+  Clock,
+  DollarSign
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { Transaction } from "../../types";
@@ -36,6 +39,28 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const [showAmountModal, setShowAmountModal] = useState(false);
+  const [tempAmount, setTempAmount] = useState(amount);
+  const [timeLeft, setTimeLeft] = useState(30);
+
+  // Timer logic for Amount Modal
+  useEffect(() => {
+    let timer: any;
+    if (showAmountModal && timeLeft > 0) {
+      timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    } else if (timeLeft === 0 && showAmountModal) {
+      setShowAmountModal(false);
+    }
+    return () => clearInterval(timer);
+  }, [showAmountModal, timeLeft]);
+
+  const presetAmounts = [1, 5, 10, 50, 100, 500];
+
+  const handleConfirmAmount = (amt: string) => {
+    setAmount(amt);
+    setShowAmountModal(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -72,15 +97,20 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             <label className="text-xs font-bold text-slate-400 uppercase ml-1">
               Amount (USD)
             </label>
-            <div className="relative group">
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-slate-900 border border-white/5 rounded-xl py-4 px-4 text-2xl font-black text-white focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => {
+                setTempAmount(amount);
+                setTimeLeft(30);
+                setShowAmountModal(true);
+              }}
+            >
+              <div
+                className="w-full bg-slate-900 border border-white/5 hover:border-primary/30 rounded-xl py-4 px-4 text-2xl font-black text-white transition-all flex items-center"
+              >
+                {amount || "0.00"}
+              </div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold pointer-events-none">
                 USD
               </div>
             </div>
@@ -193,6 +223,98 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             ))}
         </div>
       </div>
+
+      {/* Custom Amount Selection Modal */}
+      <AnimatePresence>
+        {showAmountModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-6"
+            onClick={() => setShowAmountModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="glass border border-white/10 rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <DollarSign size={20} className="text-primary" /> Investment
+                </h2>
+                <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tabular-nums transition-colors ${timeLeft <= 5 ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-primary/20 text-primary'}`}>
+                    <Clock size={12} />
+                    00:{timeLeft.toString().padStart(2, '0')}
+                  </div>
+                  <button 
+                    onClick={() => setShowAmountModal(false)}
+                    className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Balance View */}
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Available Balance</p>
+                    <p className="text-xl font-bold text-white tabular-nums">${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                  </div>
+                  <button 
+                    onClick={() => setTempAmount(balance.toString())}
+                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-black uppercase transition-colors"
+                  >
+                    Max
+                  </button>
+                </div>
+
+                {/* Amount Output */}
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-500">$</span>
+                  <input
+                    type="number"
+                    value={tempAmount}
+                    onChange={(e) => setTempAmount(e.target.value)}
+                    placeholder="0.00"
+                    autoFocus
+                    className="w-full bg-slate-900/80 border border-white/10 hover:border-primary/50 focus:border-primary rounded-2xl py-5 pl-10 pr-16 text-3xl font-black text-white focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all tabular-nums"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">USD</span>
+                </div>
+
+                {/* 3x2 Preset Grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  {presetAmounts.map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setTempAmount(preset.toString())}
+                      className="py-3 rounded-xl bg-slate-800 border border-white/5 hover:border-white/20 hover:bg-slate-700 text-white font-bold text-lg transition-all active:scale-95"
+                    >
+                      ${preset}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Submit Area */}
+                <button
+                  onClick={() => handleConfirmAmount(tempAmount)}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-black text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40 transition-all active:scale-95 flex items-center justify-center"
+                >
+                  Confirm Amount
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

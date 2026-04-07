@@ -23,7 +23,7 @@ export const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { balance, transactions } = useWallet();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "profile" | "bank" | "security" | "history"
   >("profile");
@@ -73,7 +73,7 @@ export const Settings: React.FC = () => {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    await supabase.auth.signOut();
+    logout();
   };
 
   // Close modal when resizing to desktop
