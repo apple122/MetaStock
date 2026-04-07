@@ -41,20 +41,27 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // --- Load data from Supabase on mount ---
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const loadData = async () => {
       setLoading(true);
+      console.log('[WalletContext] Loading data for user:', user.id);
       try {
-        // Transactions and Portfolio are still managed here
-        const { data: txData } = await supabase
+        // Load transactions
+        const { data: txData, error: txError } = await supabase
           .from('transactions')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (txData) {
-          setTransactions(txData.map((tx: any) => ({
+        if (txError) {
+          console.error('[WalletContext] Error loading transactions:', txError.message, txError.details, txError.hint);
+        } else {
+          console.log('[WalletContext] Transactions loaded:', txData?.length ?? 0);
+          setTransactions((txData ?? []).map((tx: any) => ({
             id: tx.id,
             type: tx.type,
             asset: tx.asset_symbol,
@@ -66,18 +73,22 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           })));
         }
 
-        const { data: portData } = await supabase
+        // Load portfolio
+        const { data: portData, error: portError } = await supabase
           .from('portfolio')
           .select('asset_symbol, units')
           .eq('user_id', user.id);
 
-        if (portData) {
+        if (portError) {
+          console.error('[WalletContext] Error loading portfolio:', portError.message, portError.details, portError.hint);
+        } else {
+          console.log('[WalletContext] Portfolio loaded:', portData?.length ?? 0, 'assets');
           const portMap: Record<string, number> = {};
-          portData.forEach((p: any) => { portMap[p.asset_symbol] = Number(p.units); });
+          (portData ?? []).forEach((p: any) => { portMap[p.asset_symbol] = Number(p.units); });
           setPortfolio(portMap);
         }
       } catch (err) {
-        console.error('Failed to load wallet data:', err);
+        console.error('[WalletContext] Unexpected error loading wallet data:', err);
       } finally {
         setLoading(false);
       }
@@ -95,32 +106,41 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
     const units = amountUSD / asset.price;
 
+    console.log(`[WalletContext] Executing ${type} trade:`, asset.symbol, 'amount:', amountUSD);
     try {
       if (type === 'buy') {
         const newBalance = balance - amountUSD;
         const newUnits = (portfolio[asset.symbol] || 0) + units;
 
-        await supabase.from('profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', user.id);
-        
-        const { data: txData } = await supabase.from('transactions').insert({
-          user_id: user.id, type: 'buy', asset_symbol: asset.symbol,
-          amount: units, price: asset.price, total: amountUSD, status: 'success',
-        }).select().single();
+        // 1. Update balance
+        const { error: balErr } = await supabase
+          .from('profiles')
+          .update({ balance: newBalance, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        if (balErr) { console.error('[WalletContext] Balance update failed:', balErr); return { success: false, message: 'Failed to update balance: ' + balErr.message }; }
 
-        await supabase.from('portfolio').upsert({
-          user_id: user.id, asset_symbol: asset.symbol, units: newUnits, updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,asset_symbol' });
+        // 2. Insert transaction
+        const { data: txData, error: txErr } = await supabase
+          .from('transactions')
+          .insert({ user_id: user.id, type: 'buy', asset_symbol: asset.symbol, amount: units, price: asset.price, total: amountUSD, status: 'success' })
+          .select()
+          .single();
+        if (txErr) { console.error('[WalletContext] Transaction insert failed:', txErr); return { success: false, message: 'Failed to save transaction: ' + txErr.message }; }
 
+        // 3. Upsert portfolio
+        const { error: portErr } = await supabase
+          .from('portfolio')
+          .upsert({ user_id: user.id, asset_symbol: asset.symbol, units: newUnits, updated_at: new Date().toISOString() }, { onConflict: 'user_id,asset_symbol' });
+        if (portErr) { console.error('[WalletContext] Portfolio upsert failed:', portErr); }
+
+        // 4. Update local state
         setBalance(newBalance);
         setPortfolio(prev => ({ ...prev, [asset.symbol]: newUnits }));
         if (txData) {
-          setTransactions(prev => [{
-            id: txData.id, type: 'buy', asset: asset.symbol,
-            amount: units, price: asset.price, total: amountUSD,
-            timestamp: txData.created_at, status: 'success',
-          }, ...prev]);
+          setTransactions(prev => [{ id: txData.id, type: 'buy', asset: asset.symbol, amount: units, price: asset.price, total: amountUSD, timestamp: txData.created_at, status: 'success' }, ...prev]);
         }
-        await refreshProfile(); // Sync global profile
+        await refreshProfile();
+        console.log('[WalletContext] Buy success:', units.toFixed(6), asset.symbol);
         return { success: true, message: `Bought ${units.toFixed(4)} ${asset.symbol}` };
 
       } else {
@@ -130,32 +150,40 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const newBalance = balance + amountUSD;
         const newUnits = held - units;
 
-        await supabase.from('profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', user.id);
+        // 1. Update balance
+        const { error: balErr } = await supabase
+          .from('profiles')
+          .update({ balance: newBalance, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        if (balErr) { console.error('[WalletContext] Balance update failed:', balErr); return { success: false, message: 'Failed to update balance: ' + balErr.message }; }
 
-        const { data: txData } = await supabase.from('transactions').insert({
-          user_id: user.id, type: 'sell', asset_symbol: asset.symbol,
-          amount: units, price: asset.price, total: amountUSD, status: 'success',
-        }).select().single();
+        // 2. Insert transaction
+        const { data: txData, error: txErr } = await supabase
+          .from('transactions')
+          .insert({ user_id: user.id, type: 'sell', asset_symbol: asset.symbol, amount: units, price: asset.price, total: amountUSD, status: 'success' })
+          .select()
+          .single();
+        if (txErr) { console.error('[WalletContext] Transaction insert failed:', txErr); return { success: false, message: 'Failed to save transaction: ' + txErr.message }; }
 
-        await supabase.from('portfolio').upsert({
-          user_id: user.id, asset_symbol: asset.symbol, units: newUnits, updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,asset_symbol' });
+        // 3. Upsert portfolio
+        const { error: portErr } = await supabase
+          .from('portfolio')
+          .upsert({ user_id: user.id, asset_symbol: asset.symbol, units: newUnits, updated_at: new Date().toISOString() }, { onConflict: 'user_id,asset_symbol' });
+        if (portErr) { console.error('[WalletContext] Portfolio upsert failed:', portErr); }
 
+        // 4. Update local state
         setBalance(newBalance);
         setPortfolio(prev => ({ ...prev, [asset.symbol]: newUnits }));
         if (txData) {
-          setTransactions(prev => [{
-            id: txData.id, type: 'sell', asset: asset.symbol,
-            amount: units, price: asset.price, total: amountUSD,
-            timestamp: txData.created_at, status: 'success',
-          }, ...prev]);
+          setTransactions(prev => [{ id: txData.id, type: 'sell', asset: asset.symbol, amount: units, price: asset.price, total: amountUSD, timestamp: txData.created_at, status: 'success' }, ...prev]);
         }
-        await refreshProfile(); // Sync global profile
+        await refreshProfile();
+        console.log('[WalletContext] Sell success:', units.toFixed(6), asset.symbol);
         return { success: true, message: `Sold ${units.toFixed(4)} ${asset.symbol}` };
       }
     } catch (err) {
-      console.error('Trade execution failed:', err);
-      return { success: false, message: 'Transaction failed' };
+      console.error('[WalletContext] Trade execution unexpected error:', err);
+      return { success: false, message: 'Transaction failed unexpectedly' };
     }
   };
 
@@ -163,15 +191,17 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const deposit = async (amount: number) => {
     if (!user) return;
     const newBalance = balance + amount;
-    await supabase.from('profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', user.id);
-    await supabase.from('transactions').insert({
+    const { error: balErr } = await supabase.from('profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', user.id);
+    if (balErr) { console.error('[WalletContext] Deposit balance update failed:', balErr); return; }
+    const { data: txData, error: txErr } = await supabase.from('transactions').insert({
       user_id: user.id, type: 'deposit', asset_symbol: 'USD',
       amount: amount, price: 1, total: amount, status: 'success',
-    });
+    }).select().single();
+    if (txErr) { console.error('[WalletContext] Deposit transaction insert failed:', txErr); }
     setBalance(newBalance);
     setTransactions(prev => [{
-      id: Math.random().toString(36).slice(2), type: 'deposit', asset: 'USD',
-      amount, price: 1, total: amount, timestamp: new Date().toISOString(), status: 'success',
+      id: txData?.id ?? Math.random().toString(36).slice(2), type: 'deposit', asset: 'USD',
+      amount, price: 1, total: amount, timestamp: txData?.created_at ?? new Date().toISOString(), status: 'success',
     }, ...prev]);
     await refreshProfile();
   };
@@ -180,15 +210,17 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const withdraw = async (amount: number): Promise<boolean> => {
     if (!user || amount > balance) return false;
     const newBalance = balance - amount;
-    await supabase.from('profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', user.id);
-    await supabase.from('transactions').insert({
+    const { error: balErr } = await supabase.from('profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', user.id);
+    if (balErr) { console.error('[WalletContext] Withdraw balance update failed:', balErr); return false; }
+    const { data: txData, error: txErr } = await supabase.from('transactions').insert({
       user_id: user.id, type: 'withdraw', asset_symbol: 'USD',
       amount: amount, price: 1, total: amount, status: 'success',
-    });
+    }).select().single();
+    if (txErr) { console.error('[WalletContext] Withdraw transaction insert failed:', txErr); }
     setBalance(newBalance);
     setTransactions(prev => [{
-      id: Math.random().toString(36).slice(2), type: 'withdraw', asset: 'USD',
-      amount, price: 1, total: amount, timestamp: new Date().toISOString(), status: 'success',
+      id: txData?.id ?? Math.random().toString(36).slice(2), type: 'withdraw', asset: 'USD',
+      amount, price: 1, total: amount, timestamp: txData?.created_at ?? new Date().toISOString(), status: 'success',
     }, ...prev]);
     await refreshProfile();
     return true;
